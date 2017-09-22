@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.idea.configuration.ui.KotlinConfigurationCheckerComponent
 import org.jetbrains.kotlin.idea.util.application.runWriteAction
+import org.jetbrains.kotlin.idea.versions.SuppressNotificationState
 import org.jetbrains.kotlin.idea.versions.UnsupportedAbiVersionNotificationPanelProvider
 import org.jetbrains.kotlin.idea.versions.createComponentActionLabel
 
@@ -80,7 +81,8 @@ class KotlinSetupEnvironmentNotificationProvider(
 
         if (!KotlinConfigurationCheckerComponent.getInstance(module.project).isSyncing &&
             !hasAnyKotlinRuntimeInScope(module) &&
-            UnsupportedAbiVersionNotificationPanelProvider.collectBadRoots(module).isEmpty()) {
+            UnsupportedAbiVersionNotificationPanelProvider.collectBadRoots(module).isEmpty() &&
+            !SuppressNotificationState.isKotlinNotConfiguredSuppressed(module.toModuleGroup())) {
             return createKotlinNotConfiguredPanel(module)
         }
 
@@ -120,6 +122,11 @@ class KotlinSetupEnvironmentNotificationProvider(
                             val configuratorsPopup = createConfiguratorsPopup(module.project, configurators)
                             configuratorsPopup.showUnderneathOf(label)
                         }
+                    }
+
+                    createComponentActionLabel("Ignore") {
+                        SuppressNotificationState.suppressKotlinNotConfigured(module)
+                        EditorNotifications.getInstance(module.project).updateAllNotifications()
                     }
                 }
             }
